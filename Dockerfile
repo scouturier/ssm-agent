@@ -1,5 +1,4 @@
-# Needed for process reaping
-FROM phusion/baseimage:18.04-1.0.0
+FROM debian:buster
 
 RUN apt-get update && \
     DEBIAN_FRONTEND=noninteractive \
@@ -13,7 +12,5 @@ RUN curl ${AGENT_URL} -o amazon-ssm-agent.deb && \
     dpkg -i amazon-ssm-agent.deb && \
     rm -f amazon-ssm-agent.deb
 
-COPY entrypoint.sh /etc/service/ssm/run
-
 WORKDIR /opt/amazon/ssm/
-CMD ["/sbin/my_init"]
+CMD ["amazon-ssm-agent", "start"]
