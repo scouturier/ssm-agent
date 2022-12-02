@@ -13,7 +13,7 @@ phases:
       - docker login --username $DOCKERHUB_USERNAME --password $DOCKERHUB_PASS
   pre_build:
     commands:
-      - REPOSITORY_URI="https://hub.docker.com/r/scouturier/ssm-agent"
+      - REPOSITORY_URI="ssm-agent"
       - COMMIT_HASH=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)
       - IMAGE_TAG=${COMMIT_HASH:=latest}
   build:
