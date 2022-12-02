@@ -1,13 +1,31 @@
 version: 0.2
 
+env:
+  secrets-manager:
+    DOCKERHUB_PASS: "dockerhub/credentials:password"
+    DOCKERHUB_USERNAME: "dockerhub/credentials:username"
+    
 phases:
   install:
     commands:
       - nohup /usr/local/bin/dockerd --host=unix:///var/run/docker.sock --host=tcp://127.0.0.1:2375 --storage-driver=overlay2 &
       - timeout 15 sh -c "until docker info; do echo .; sleep 1; done"
+      - docker login --username $DOCKERHUB_USERNAME --password $DOCKERHUB_PASS
   pre_build:
     commands:
-      - docker build -t ssm-agent .
+      - REPOSITORY_URI=https://hub.docker.com/r/scouturier/ssm-agent
+      - COMMIT_HASH=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)
+      - IMAGE_TAG=${COMMIT_HASH:=latest}
   build:
     commands:
-      - docker images
+      - docker build -t ssm-agent .
+      - echo Build started on `date`
+      - echo Building the Docker image...          
+      - docker build -t $REPOSITORY_URI:latest .
+      - docker tag $REPOSITORY_URI:latest $REPOSITORY_URI:$IMAGE_TAG
+  post_build:
+    commands:
+      - echo Build completed on `date`
+      - echo Pushing the Docker images...
+      - docker push $REPOSITORY_URI:latest
+      - docker push $REPOSITORY_URI:$IMAGE_TAG
